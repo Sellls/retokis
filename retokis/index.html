@@ -3,33 +3,709 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retokis — Магазин DLC</title>
-    <link rel="stylesheet" href="style.css">
+    <title>RETOKIS | Игровые услуги</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            color: #0ff;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            background: #000;
+        }
+        
+        /* Фоновые слои */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        
+        .background {
+            height: 100vh;
+            object-fit: contain;
+            object-position: center bottom;
+            filter: brightness(0.7) contrast(1.1) saturate(1.2);
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: transparent;
+            opacity: 0.7;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.2) 100%);
+            z-index: -2;
+        }
+        
+        /* Главная страница */
+        .main-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 0 10%;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .shop-title {
+            font-size: 5rem;
+            text-shadow: 0 0 15px #0ff;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, #0ff, #f0f, #0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 5s ease infinite;
+            background-size: 200% 200%;
+            margin-bottom: 30px;
+        }
+        
+        .hero-text {
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .hero-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            color: #fff;
+        }
+        
+        .hero-text .highlight {
+            color: #0ff;
+            text-shadow: 0 0 10px #0ff;
+        }
+        
+        .hero-text p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #c0c0c0;
+            max-width: 600px;
+        }
+        
+        .enter-btn {
+            margin-top: 40px;
+            padding: 15px 40px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #0ff;
+            color: #0ff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        
+        .enter-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px #0ff;
+            transform: translateY(-2px);
+        }
+
+        /* Интерфейс магазина (изначально скрыт) */
+        .shop-interface {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Аниме-ассистент */
+        .anime-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            z-index: 10;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #0ff;
+            box-shadow: 0 0 20px #0ff;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .anime-assistant img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Основная структура магазина */
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.85);
+            border-right: 1px solid #0ff;
+            padding: 20px;
+            z-index: 2;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 40px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Секции */
+        .section {
+            display: none;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #0ff;
+            padding: 20px;
+            margin-top: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        /* Карточки продуктов */
+        .game-card {
+            background: rgba(10, 20, 30, 0.9);
+            border: 1px solid #0ff;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            backdrop-filter: blur(3px);
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px #0ff;
+            background: rgba(20, 40, 60, 0.9);
+        }
+        
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: rgba(0, 10, 20, 0.95);
+            border: 1px solid #0ff;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px #0ff;
+        }
+        
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #0ff;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close:hover {
+            text-shadow: 0 0 10px #0ff;
+            transform: rotate(90deg);
+        }
+        
+        .period-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .period-option {
+            padding: 10px 20px;
+            border: 1px solid #0ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .period-option:hover, .period-option.selected {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 15px #0ff;
+        }
+        
+        .buy-btn {
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        /* Статусы */
+        .status-item {
+            padding: 10px;
+            border-bottom: 1px dashed rgba(0, 255, 255, 0.5);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .status {
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        /* Кнопка назад */
+        .back-btn {
+            position: fixed;
+            top: 80px; /* Изменено с 20px на 80px */
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #0ff;
+            color: #0ff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            z-index: 11;
+        }
+        
+        .back-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 15px #0ff;
+        }
+
+        /* Стили для кнопок в боковой панели */
+        .main-btn {
+            padding: 15px;
+            margin: 10px 0;
+            width: 100%;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #0ff;
+            color: #0ff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .main-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 15px #0ff;
+            transform: translateY(-2px);
+        }
+        
+        .sidebar-buttons {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Анимации */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .shop-title {
+                font-size: 3rem;
+            }
+            
+            .hero-text h1 {
+                font-size: 1.8rem;
+            }
+            
+            .hero-text p {
+                font-size: 1rem;
+            }
+            
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #0ff;
+            }
+            
+            .anime-assistant {
+                width: 150px;
+                height: 150px;
+            }
+
+            .back-btn {
+                top: 70px; /* Адаптивное положение для мобильных */
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="hero">
-            <img src="images/anime-girl.jpg" alt="Аниме девочка" class="hero-image">
-            <h1>Retokis — Магазин DLC</h1>
-            <a href="https://discord.gg/EM72w4dQSs" class="cta-button">Купить сейчас</a>
+    <!-- Фоновые элементы -->
+    <div class="background-container">
+        <img class="background" src="https://i.imgur.com/K2KOZbU.png" alt="Аниме фон">
+    </div>
+    <div class="overlay"></div>
+    <div id="particles-js"></div>
+    
+    <!-- Главная страница -->
+    <div class="main-page" id="mainPage">
+        <h1 class="shop-title">RETOKIS</h1>
+        
+        <div class="hero-text">
+            <h1>Доминируй в&nbsp;каждом матче с&nbsp;нашими <span class="highlight">Приватними читами</span></h1>
+            <p>
+                Надёжный поставщик читов, которому можно доверять — высокопроизводительные, неуловимые хаки по&nbsp;лучшим ценам, с&nbsp;поддержкой премиум-уровня.
+            </p>
         </div>
-    </header>
-    <section class="games">
-        <h2>Наши игры</h2>
-        <ul>
-            <li>Rust</li>
-            <li>Escape from Tarkov</li>
-            <li>Delta Force</li>
-            <li>Battlefield</li>
-            <li>Apex Legends</li>
-            <li>Valorant</li>
-            <li>Fortnite</li>
-            <li>CS2</li>
-            <li>Marvel Rivals</li>
-        </ul>
-    </section>
-    <footer>
-        <p>&copy; 2025 Retokis. Все права защищены.</p>
-    </footer>
+        
+        <button class="enter-btn" id="enterBtn">ВОЙТИ В МАГАЗИН</button>
+    </div>
+    
+    <!-- Интерфейс магазина -->
+    <div class="shop-interface" id="shopInterface">
+        <button class="back-btn" id="backBtn">← НАЗАД</button>
+        
+        <!-- Аниме-ассистент -->
+        <div class="anime-assistant">
+            <img src="https://i.imgur.com/K2KOZbU.png" alt="Аниме ассистент">
+        </div>
+        
+        <!-- Основная структура -->
+        <div class="main-container">
+            <!-- Боковая панель -->
+            <div class="sidebar">
+                <h2 style="color: #0ff; text-shadow: 0 0 10px #0ff; margin-bottom: 20px;">МЕНЮ</h2>
+                
+                <div class="sidebar-buttons">
+                    <button class="main-btn" id="showProductsBtn">НАШИ ПРОДУКТЫ</button>
+                    <button class="main-btn" id="showStatusBtn">СТАТУСЫ</button>
+                </div>
+            </div>
+            
+            <!-- Основное содержимое -->
+            <div class="content">
+                <h1 class="shop-title">RETOKIS</h1> <!-- Убрал display: none -->
+                
+                <!-- Секция статусов -->
+                <div class="section" id="statusSection">
+                    <h2 style="color: #0ff; margin-bottom: 20px;">СТАТУСЫ ПРОДУКТОВ:</h2>
+                    <div class="status-item">
+                        <span>Rust</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Valorant</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Escape from Tarkov</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Delta Force</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Battlefield</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Apex Legends</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Fortnite</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>CS2</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Marvel Rivals</span>
+                        <span class="status">UNDETECTED</span>
+                    </div>
+                </div>
+                
+                <!-- Секция продуктов -->
+                <div class="section active" id="productsSection">
+                    <h2 style="color: #0ff; margin-bottom: 20px;">НАШИ ПРОДУКТЫ:</h2>
+                    <div class="game-card" data-game="Rust">
+                        <h3>RUST</h3>
+                    </div>
+                    <div class="game-card" data-game="Valorant">
+                        <h3>VALORANT</h3>
+                    </div>
+                    <div class="game-card" data-game="Escape from Tarkov">
+                        <h3>ESCAPE FROM TARKOV</h3>
+                    </div>
+                    <div class="game-card" data-game="Delta Force">
+                        <h3>DELTA FORCE</h3>
+                    </div>
+                    <div class="game-card" data-game="Battlefield">
+                        <h3>BATTLEFIELD</h3>
+                    </div>
+                    <div class="game-card" data-game="Apex Legends">
+                        <h3>APEX LEGENDS</h3>
+                    </div>
+                    <div class="game-card" data-game="Fortnite">
+                        <h3>FORTNITE</h3>
+                    </div>
+                    <div class="game-card" data-game="CS2">
+                        <h3>CS2</h3>
+                    </div>
+                    <div class="game-card" data-game="Marvel Rivals">
+                        <h3>MARVEL RIVALS</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Модальное окно выбора периода -->
+        <div id="gameModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2 id="modalGameTitle" style="color: #0ff;">ВЫБЕРИТЕ СРОК</h2>
+                <p style="color: #0ff;">Для: <span id="selectedGameName" style="color: #ff66b2; text-shadow: 0 0 5px #ff66b2;"></span></p>
+                
+                <div class="period-options">
+                    <div class="period-option" data-days="1">1 ДЕНЬ</div>
+                    <div class="period-option" data-days="7">7 ДНЕЙ</div>
+                    <div class="period-option" data-days="30">30 ДНЕЙ</div>
+                </div>
+                
+                <button id="buyButton" class="main-btn buy-btn" disabled onclick="redirectToDiscord()">КУПИТЬ</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Подключаем библиотеку particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Инициализация частиц
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 150,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": ["#0ff", "#f0f", "#ff0"]
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000"
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.7,
+                        "random": true,
+                        "anim": {
+                            "enable": true,
+                            "speed": 1,
+                            "opacity_min": 0.2,
+                            "sync": false
+                        }
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true,
+                        "anim": {
+                            "enable": true,
+                            "speed": 2,
+                            "size_min": 1,
+                            "sync": false
+                        }
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 120,
+                        "color": "#0ff",
+                        "opacity": 0.4,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 3,
+                        "direction": "none",
+                        "random": true,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false,
+                        "attract": {
+                            "enable": true,
+                            "rotateX": 600,
+                            "rotateY": 1200
+                        }
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "window",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "repulse"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        }
+                    },
+                    "modes": {
+                        "repulse": {
+                            "distance": 100,
+                            "duration": 0.4
+                        },
+                        "push": {
+                            "particles_nb": 6
+                        }
+                    }
+                }
+            });
+            
+            // Переход в магазин
+            document.getElementById('enterBtn').addEventListener('click', function() {
+                document.getElementById('mainPage').style.display = 'none';
+                document.getElementById('shopInterface').style.display = 'block';
+                
+                // Показываем только продукты при входе
+                document.getElementById('productsSection').classList.add('active');
+                document.getElementById('statusSection').classList.remove('active');
+                document.getElementById('showProductsBtn').style.background = 'rgba(0, 255, 255, 0.3)';
+                document.getElementById('showStatusBtn').style.background = 'rgba(0, 255, 255, 0.1)';
+            });
+            
+            // Кнопка назад
+            document.getElementById('backBtn').addEventListener('click', function() {
+                document.getElementById('shopInterface').style.display = 'none';
+                document.getElementById('mainPage').style.display = 'flex';
+            });
+            
+            // Показать секцию продуктов
+            document.getElementById('showProductsBtn').addEventListener('click', function() {
+                document.getElementById('productsSection').classList.add('active');
+                document.getElementById('statusSection').classList.remove('active');
+                this.style.background = 'rgba(0, 255, 255, 0.3)';
+                document.getElementById('showStatusBtn').style.background = 'rgba(0, 255, 255, 0.1)';
+            });
+            
+            // Показать секцию статусов
+            document.getElementById('showStatusBtn').addEventListener('click', function() {
+                document.getElementById('statusSection').classList.add('active');
+                document.getElementById('productsSection').classList.remove('active');
+                this.style.background = 'rgba(0, 255, 255, 0.3)';
+                document.getElementById('showProductsBtn').style.background = 'rgba(0, 255, 255, 0.1)';
+            });
+            
+            // Обработчики для карточек игр
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const currentGame = this.getAttribute('data-game');
+                    document.getElementById('selectedGameName').textContent = currentGame;
+                    document.getElementById('modalGameTitle').textContent = `ВЫБЕРИТЕ СРОК: ${currentGame}`;
+                    document.getElementById('gameModal').style.display = 'flex';
+                    
+                    // Сброс выбора периода
+                    document.querySelectorAll('.period-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    document.getElementById('buyButton').disabled = true;
+                });
+            });
+            
+            // Выбор периода
+            document.querySelectorAll('.period-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.period-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    document.getElementById('buyButton').disabled = false;
+                });
+            });
+            
+            // Перенаправление в Discord
+            window.redirectToDiscord = function() {
+                window.open('https://discord.gg/EM72w4dQSs', '_blank');
+                closeModal();
+            };
+            
+            // Закрытие модального окна
+            window.closeModal = function() {
+                document.getElementById('gameModal').style.display = 'none';
+            };
+            
+            // Закрытие при клике вне модального окна
+            window.addEventListener('click', function(event) {
+                if (event.target === document.getElementById('gameModal')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
